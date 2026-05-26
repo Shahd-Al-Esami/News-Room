@@ -99,7 +99,7 @@ CACHE_STORE=redis
 
 11. Run scheduler locally
 
-php artisan schedule:work
+php artisan schedule:run
 
 Production cron:
 
