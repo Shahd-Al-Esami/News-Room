@@ -21,6 +21,7 @@ protected $casts=[
 
 static public function booted(){
 
+//cache invalidation for comments
     static::created(function($comment){
         Cache::tags(['Comments'])->flush();
      });
@@ -29,7 +30,7 @@ static public function booted(){
      });
      static::updated(function ($comment) {
         Cache::tags(['Comments'])->flush();
-        
+
     });
     static::forceDeleted(function ($comment) {
         Cache::tags(['Comments'])->flush();

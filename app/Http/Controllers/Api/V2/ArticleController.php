@@ -24,34 +24,4 @@ class ArticleController extends Controller
     }
 
 
-    public function publishArticle(Article $article): ArticleResource
-    {
-        return new ArticleResource(
-            $this->articleService->publishArticle($article)
-        );
-    }
-
-    public function store(CreateArticle $request): ArticleResource
-    {
-        $article = $this->articleService->createArticle($request->validated());
-        return new ArticleResource($article);
-    }
-
-    public function update(UpdateArticle $request, Article $article): ArticleResource
-    {
-        $updatedArticle = $this->articleService->updateArticle($article, $request->validated());
-        return new ArticleResource($updatedArticle);
-    }
-
-    public function destroy(Article $article): JsonResponse
-    {
-        $this->articleService->deleteArticle($article);
-        return response()->json(['message' => 'Article deleted successfully'], 200);
-    }
-
-    // public function show(Article $article): ArticleResource
-    // {
-    //     $article=$this->articleService->show($article);
-    //     return new ArticleResource($article);
-    // }
 }

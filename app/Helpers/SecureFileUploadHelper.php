@@ -43,7 +43,7 @@ class SecureFileUploadHelper
 
         $ext = strtolower($file->guessExtension() ?? $file->getClientOriginalExtension());
 
-        if (in_array($ext, config('media.disallowed_extensions', []))) {
+        if (in_array($ext, config('media.disallowed_extensions',[] ))) {
             throw new RuntimeException('This file extension is strictly disallowed.');
         }
 

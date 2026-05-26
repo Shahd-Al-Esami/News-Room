@@ -20,7 +20,7 @@ public function getStats()
 
     public function countArticles()
     {
-        //invalidation cache in model article booted method
+        //invalidation cache in the observer
         $statsArticles=Cache::tags(['dashboard','Articles'])->remember('totalArticles', now()->addMinutes(10), function () {
 
 
@@ -49,10 +49,10 @@ $cached = Cache::tags(['dashboard', 'Users'])->get('topWriters');
                 if ($cached !== null) {
                     return $cached;
                 }
-        return
+        
                           $topWriters=DB::table('users')->join('articles', 'users.id', '=', 'articles.writer_id')
-                            ->select('users.name', DB::raw('COUNT(articles.id) as articles_count'))
-                             ->groupBy('users.id','users.name')
+                            ->select('users.id','users.first_name', DB::raw('COUNT(articles.id) as articles_count'))
+                             ->groupBy('users.id','users.first_name')
                            ->orderByDesc('articles_count')->limit(5) ->get()->toArray();
 
 
@@ -64,6 +64,7 @@ $cached = Cache::tags(['dashboard', 'Users'])->get('topWriters');
     {
     $commentsCount=Cache::tags(['dashboard','Comments'])->remember('commentsCount', now()->addMinutes(10), function () {
         return Cache::lock('lock:commentsCount', 10)->block(5,function () {
+            //double check to avoid cache stampede
 $cached = Cache::tags(['dashboard', 'Comments'])->get('commentsCount');
                 if ($cached !== null) {
                     return $cached;
@@ -87,6 +88,7 @@ $cached = Cache::tags(['dashboard', 'Comments'])->get('commentsCount');
         //invalidation in article service
         return Cache::tags(['dashboard','Tags'])->remember('topTags', now()->addMinutes(10), function () {
             return Cache::lock('lock:topTags', 10)->block(5,function () {
+                //double check to avoid cache stampede
                 $cached = Cache::tags(['dashboard', 'Tags'])->get('topTags');
                 if ($cached !== null) {
                     return $cached;
@@ -95,7 +97,7 @@ $cached = Cache::tags(['dashboard', 'Comments'])->get('commentsCount');
                               $topTags = Tag::withCount('articles')
                                 ->orderByDesc('articles_count')
                                 ->take(10)
-                                ->get(['id', 'name'])->toArray();
+                                ->get(['id', 'name','articles_count'])->toArray();
 
                      });
         });

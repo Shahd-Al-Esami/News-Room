@@ -18,7 +18,7 @@ class SendReaderArticleNotificationsJob implements ShouldQueue
 
      public $tries=3;
 public $timeout=120;
-public $backoff=10;
+public $backOff=10;
 
     /**
      * Create a new job instance.
@@ -33,6 +33,7 @@ public $backoff=10;
      */
     public function handle(): void
     {
+        $this->article->loadMissing('writer');
         User::where('role','reader')->chunk(100,function($readers){
             foreach($readers as $reader){
                 $reader->notify(new ReaderArticleNotification($this->article));

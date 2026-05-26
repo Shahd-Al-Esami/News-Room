@@ -15,7 +15,7 @@ public string $queue='Notifications';
 
 public $tries=3;
 public $timeout=120;
-public $backoff=10;
+public $backOff=10;
     /**
      * Create the event listener.
      */
@@ -30,6 +30,7 @@ public $backoff=10;
     public function handle(PublishArticle $event): void
     {
              User::where('role', 'admin')->get()->each(function ($admin) use ($event) {
+                
             $this->adminService->notify($admin->id, ['title' => $event->article->title]);
         });
     }

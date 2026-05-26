@@ -43,4 +43,5 @@ return [
         'user/{id}/avatar',
     ],
 
+
 ];

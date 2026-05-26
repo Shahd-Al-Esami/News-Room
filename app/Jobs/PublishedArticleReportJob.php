@@ -18,6 +18,8 @@ class PublishedArticleReportJob implements ShouldQueue
      use InteractsWithQueue,Queueable,Dispatchable,SerializesModels;
 
    public $tries = 3;
+   public $timeout=120;
+   public $backOff=10;
 
     /**
      * Create a new job instance.

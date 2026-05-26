@@ -11,6 +11,7 @@ class ArticleObserver
 
   private function clearCache(): void
     {
+        // Invalidate cache for articles and users when an article is created, updated, deleted, restored, or force deleted
         Cache::tags(['Articles'])->flush();
         Cache::tags(['Users'])->flush();
     }

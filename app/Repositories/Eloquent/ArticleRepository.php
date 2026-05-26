@@ -12,13 +12,15 @@ use Illuminate\Support\Str;
 
 class ArticleRepository extends BaseRepository implements ArticleRepositoryInterface
 {
-    public function __construct(Article $model)
+    public function __construct( Article $model)
     {
         parent::__construct($model);
     }
 
 public function getPublishedArticles(array $relations=[],array $counts=[])
     {
+       // use DB::enableQueryLog(); in the logApiRequest middleware to check the number of queries executed
+
         return $this->model->query()
             ->where('status', 'published')->with($relations)->withCount($counts)
            ->latest()
@@ -41,11 +43,12 @@ public function getPublishedArticles(array $relations=[],array $counts=[])
 
 
     public function publishArticle($article) {
-        $this->model->update([
-            'status' => ArticleStatus::Published,
-        ]);
-        $article->published_at = now();
-        $article->save();
+
+        $article->update([
+        'status' => ArticleStatus::Published,
+        'published_at' => now(),
+    ]);
+
         return $article;
     }
 
@@ -70,11 +73,11 @@ return $article;
 
 
 
-        public function update( $article, array $data)
+        public function update($article, array $data)
         {
 
 
-                $article=$this->model->update([
+                $article->update([
                     'title' => $data['title'] ?? $article->title,
                     'slug' => $data['slug'] ?? Str::slug($data['title'] ?? $article->title),
                     'category' => $data['category'] ?? $article->category,
@@ -94,8 +97,11 @@ return $article;
                 $this->model->delete($id);
 
         }
-// public function findWithDetails($id){
-//     return $this->model->find($id);
-// }
+public function findWithDetails($id){
+return $this->model->query()
+          ->with(['writer:id,first_name,last_name,email', 'comments:id,user_id,body,created_at', 'tags:id,name,slug'])
+          ->withCount(['comments'])
+          ->where('id', $id)
+          ->firstOrFail();}
 
 }

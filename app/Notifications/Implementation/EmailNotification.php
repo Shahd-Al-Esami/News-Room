@@ -9,7 +9,7 @@ class EmailNotification implements NotificationServiceInterface
 {
     public function send($userId,$data)
     {
-        $user = User::find($userId);
+        $user = User::findOrFail($userId);
         Mail::to($user->email)->send(new WriterArticlePublishedMail($data));
         // Simulate sending an email notification
         // echo "Email sent to user {$userId} with message: {$message}";

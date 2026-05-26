@@ -60,8 +60,7 @@ public function title():Attribute
     );
     }
 
-//scopes
-//scope status published+by user
+
 
     public function writer():BelongsTo
     {

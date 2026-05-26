@@ -16,7 +16,7 @@ class notifyWriterPublishArticle implements ShouldQueue
 public string $queue='Notifications';
 public $tries=3;
 public $timeout=120;
-public $backoff=10;
+public $backOff=10;
     /**
      * Create the event listener.
      */
@@ -30,7 +30,7 @@ public $backoff=10;
      */
     public function handle(PublishArticle $event): void
     {
-        $this->writerService->notify($event->article->writer_id, ['title' => $event->article]);
+        $this->writerService->notify($event->article->writer_id, ['title' => $event->article->title]);
 
     }
 }

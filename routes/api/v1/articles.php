@@ -1,5 +1,5 @@
 <?php
-namespace Routes\Api;
+namespace Routes\Api\V1;
 use App\Http\Controllers\Api\V1\ArticleController;
 use Illuminate\Support\Facades\Route;
 

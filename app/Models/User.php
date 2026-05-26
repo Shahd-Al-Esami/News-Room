@@ -86,6 +86,7 @@ protected static function booted()
  */
 protected static function clearUserDashboardCache(): void
 {
+    //cache invalidation for user and articles dashboard
     Cache::tags(['Users'])->flush();
 
     Cache::tags(['Articles'])->flush();

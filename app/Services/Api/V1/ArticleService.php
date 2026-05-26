@@ -13,6 +13,7 @@ use App\Services\Api\V1\WriterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ArticleService
 {
@@ -22,12 +23,57 @@ class ArticleService
 
     public function getPublishedArticlesV1()
     {
-        return $this->articleRepository->getPublishedArticles(['writer:id,first_name,last_name,email','comments:id,user_id,body,created_at'],[]);
+      // Using page query param to make unique cache keys per page
+
+        $page = request('page', 1);
+        $cacheKey = "published_articles_v1_page_{$page}";
+        $lockKey = "lock_" . $cacheKey;
+
+        return Cache::tags(['Articles'])->remember($cacheKey, now()->addDay(), function () use ($cacheKey, $lockKey) {
+
+            return Cache::lock($lockKey, 10)->block(5, function () use ($cacheKey) {
+// Double check to avoid cache stampede
+$data = Cache::tags(['Articles'])->get($cacheKey);
+
+                if ($data !== null) {
+                    return $data;
+                }
+
+                Log::info(" Safe DB Fetch Under Remember-Lock Sequence for: {$cacheKey}");
+//get data from database and store it in cache
+                return $this->articleRepository->getPublishedArticles(
+                    ['writer:id,first_name,last_name,email', 'comments:id,user_id,body,created_at'],
+                    []
+                );
+            });
+        });
     }
+
 
    public function getPublishedArticlesV2()
     {
-        return $this->articleRepository->getPublishedArticles(['writer:id,first_name,last_name,email','comments:id,user_id,body,created_at','tags:is,name,slug'],['comments']);
+        // Using page query param to make unique cache keys per page
+
+        $page = request('page', 1);
+        $cacheKey = "published_articles_v2_page_{$page}";
+        $lockKey = "lock_" . $cacheKey;
+
+        return Cache::tags(['Articles'])->remember($cacheKey, now()->addDay(), function () use ($cacheKey, $lockKey) {
+
+            return Cache::lock($lockKey, 10)->block(5, function () use ($cacheKey) {
+// Double check to avoid cache stampede
+$data = Cache::tags(['Articles'])->get($cacheKey);
+
+                if ($data !== null) {
+                    return $data;
+                }
+
+                Log::info(" Safe DB Fetch Under Remember-Lock Sequence for: {$cacheKey}");
+//get data from database and store it in cache
+        return $this->articleRepository->getPublishedArticles(['writer:id,first_name,last_name,email','comments:id,user_id,body,created_at','tags:id,name,slug'],['comments']);
+
+            });
+        });
     }
 
 
@@ -38,14 +84,16 @@ class ArticleService
 
     public function archiveArticles($articles): int
     {
-        foreach ($articles as $article) {
+        if ($articles->isEmpty())
+            return 0;
 
-            $article->update([
-                'status' => 'archived',
-            ]);
-        }
-
-        return $articles->count();
+    $archivedArticles = Article::whereIn('id', $articles->pluck('id'))
+        ->update([
+            'status' => 'archived',
+            'updated_at' => now()
+        ]);
+        //return number of archived articles after update thier status to archived
+         return $archivedArticles;
     }
 
 
@@ -74,14 +122,10 @@ public function publishArticle(Article $article)
 // Dispatch event to notify readers about the new published article
 // and to notify the writer about the publication
 //and to notify admins about the new published article
+//and record published article in log file
 
             PublishArticle::dispatch($article);
 
-        // User::where('role', 'admin')->get()->each(function ($admin) use ($article) {
-        //     $this->adminService->notify($admin->id, ['title' => $article->title]);
-        // });
-
-        // $this->writerService->notify($article->writer_id, ['title' => $article->title]);
 
         return $publishedArticle;
     }
@@ -105,6 +149,7 @@ public function publishArticle(Article $article)
 
             if (!empty($tags)) {
                 $article->tags()->sync($tags);
+                // Invalidate cache for tags after syncing article tags
                 DB::afterCommit(function()  {
                 Cache::tags(['Tags'])->flush();
             });            }
@@ -136,6 +181,7 @@ public function publishArticle(Article $article)
 
             if (is_array($tags)) {
                 $article->tags()->sync($tags);
+                // Invalidate cache for tags after updating article tags
                 DB::afterCommit(function()  {
                 Cache::tags(['Tags'])->flush();
             });
@@ -166,21 +212,22 @@ public function publishArticle(Article $article)
             if($article->tags()->exists()){
 
             $article->tags()->detach();
-
+// Invalidate cache for tags after detaching article tags
             DB::afterCommit(function()  {
-Cache::tags(['Tags'])->flush();            });
+                Cache::tags(['Tags'])->flush();
+                    });
             }
 
             $article->comments()->delete();
             $article->attachments()->delete();
 
 
-            return $this->articleRepository->delete($article);
+            return $this->articleRepository->delete($article->id);
         });
     }
 
-    //  public function show($article)
-    // {
-    //     return $this->articleRepository->findWithDetails($article);
-    // }
+     public function show($id)
+    {
+        return $this->articleRepository->findWithDetails($id);
+    }
 }
