@@ -42,7 +42,7 @@ Laravel Scheduler
 
  Sanctum Authentication
 
-## Project Setup
+### Project Setup
 
 1. Clone the repository:
    ```bash
@@ -116,7 +116,7 @@ Production cron:
    php artisan serve
    ```
 
-## Main Entities and Relationships
+#### Main Entities and Relationships
 
 ### User
 - Represents authenticated users in the system.
@@ -166,7 +166,7 @@ Production cron:
 
 
 
-## Architecture Decisions
+##### Architecture Decisions
 
 ### Repository Pattern
 
@@ -220,7 +220,46 @@ triggering side effects automatically
 Using an observer keeps the model event handling outside of controllers and models, making cache invalidation and side effects easier to manage.
 
 
-## Service Layer
+
+### Strategy Pattern + Contextual Binding
+
+The notification system was designed using the Strategy Pattern to support multiple notification delivery mechanisms such as:
+
+- Email notifications
+- Database notifications
+
+A shared notification interface was introduced, while each notification type has its own implementation class.
+
+Laravel's IoC Container and Contextual Binding were used to dynamically inject the appropriate notification strategy depending on the service context.
+
+Example:
+
+NotificationServiceInterface
+        ↓
+EmailNotificationService
+DatabaseNotificationService
+
+This approach provides:
+
+- Loose coupling
+- Better extensibility
+- Cleaner dependency injection
+- Easier future expansion
+
+### IoC Container
+
+Laravel's IoC Container was used to manage dependency injection automatically across the application.
+
+Repositories, services, and interfaces are resolved through service container bindings instead of manual instantiation.
+
+This improves:
+
+- Testability
+- Maintainability
+- Flexibility
+
+
+### Service Layer
 
 Business logic is handled inside services.
 
@@ -247,7 +286,7 @@ Repository
 
 
 
-## Events & Listeners
+### Events & Listeners
 
 Events are used for decoupled side effects.
 
@@ -271,7 +310,7 @@ allow adding features without modifying core logic
 
 
 
-## Queues & Jobs
+### Queues & Jobs
 
 Heavy operations are processed asynchronously.
 
@@ -351,7 +390,40 @@ The project supports API versioning:
 /api/v1
 /api/v2
 
-### Security Considerations
+
+# Database Indexing
+
+Indexes were added to improve query performance and optimize filtering operations.
+
+Single Indexes
+
+Single indexes were used on frequently searched columns such as:
+
+- email
+- status
+- published_at
+
+These indexes improve lookup speed for simple queries.
+
+Composite Indexes
+
+Composite indexes were used for queries filtering by multiple columns together.
+
+Example:
+
+(status, published_at)
+
+This improves performance for queries such as:
+
+WHERE status = 'published'
+AND published_at >= ?
+
+Using indexes helps reduce query execution time and improves scalability for large datasets.
+
+
+
+
+###### Security Considerations
 
 Implemented security practices include:
 

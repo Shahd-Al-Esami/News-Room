@@ -18,7 +18,7 @@ class UserRegistered
     /**
      * Create a new event instance.
      */
-    public function __construct(public readonly User $user)
+    public function __construct(public  User $user)
     {
         //
     }
@@ -31,7 +31,6 @@ class UserRegistered
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
         ];
     }
 }

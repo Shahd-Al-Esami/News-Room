@@ -13,6 +13,7 @@ use App\Services\Api\V1\WriterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
 class ArticleService
@@ -120,11 +121,14 @@ public function publishArticle(Article $article)
         $publishedArticle = $this->articleRepository->publishArticle($article);
 
 // Dispatch event to notify readers about the new published article
-// and to notify the writer about the publication
-//and to notify admins about the new published article
-//and record published article in log file
 
-            PublishArticle::dispatch($article);
+// and to notify the writer about the publication
+
+//and to notify admins about the new published article
+
+//and record published article in log file as a immediatly action
+
+            Event::dispatch(new PublishArticle($article));
 
 
         return $publishedArticle;
@@ -140,8 +144,7 @@ public function publishArticle(Article $article)
             unset($data['tags'], $data['attachments']);
 
             $article = $this->articleRepository->create($data);
-
-
+            
             if($article->status === 'published')
             PublishArticle::dispatch($article)->afterCommit();
 

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 //syncronous listener to log article published event
 class LogArticlePublishedListener
 {
+    //writes log immediatly
+    
     /**
      * Create the event listener.
      */
