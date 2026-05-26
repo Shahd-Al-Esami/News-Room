@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardStats{
 
-
+//invalidation cache dashboard implements  in articleObserver when status is changed
 public function getStats()
     {
         return [
@@ -49,7 +49,7 @@ $cached = Cache::tags(['dashboard', 'Users'])->get('topWriters');
                 if ($cached !== null) {
                     return $cached;
                 }
-        
+
                           $topWriters=DB::table('users')->join('articles', 'users.id', '=', 'articles.writer_id')
                             ->select('users.id','users.first_name', DB::raw('COUNT(articles.id) as articles_count'))
                              ->groupBy('users.id','users.first_name')

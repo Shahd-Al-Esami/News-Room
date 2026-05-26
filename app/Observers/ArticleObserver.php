@@ -33,6 +33,8 @@ class ArticleObserver
     {
         if ($article->wasChanged('status')) {
             $this->clearCache();
+        Cache::tags(['Dashboard'])->flush();
+
         }
     }
 

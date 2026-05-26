@@ -15,19 +15,10 @@ class SecurityHeadersMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Force JSON Accept Header
-        |--------------------------------------------------------------------------
-        */
-        if (
-            !$request->headers->has('Accept') ||
-            $request->headers->get('Accept') === '*/*'
-        ) {
-            $request->headers->set(
-                'Accept',
-                'application/json'
-            );
+
+
+        if (!$request->expectsJson()) {
+            $request->headers->set('Accept', 'application/json');
         }
 
         $response = $next($request);
@@ -38,46 +29,44 @@ class SecurityHeadersMiddleware
         |--------------------------------------------------------------------------
         */
         $response->headers->remove('X-Powered-By');
-        $response->headers->remove('Server');
+
 
         /*
         |--------------------------------------------------------------------------
         | Prevent Clickjacking
         |--------------------------------------------------------------------------
         */
-        $response->headers->set(
-            'X-Frame-Options',
-            'DENY'
-        );
+        $response->headers->set('X-Frame-Options', 'DENY');
 
         /*
         |--------------------------------------------------------------------------
         | Prevent MIME Type Sniffing
         |--------------------------------------------------------------------------
         */
-        $response->headers->set(
-            'X-Content-Type-Options',
-            'nosniff'
-        );
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
 
         /*
         |--------------------------------------------------------------------------
         | Adobe Cross Domain Policies
         |--------------------------------------------------------------------------
         */
-        $response->headers->set(
-            'X-Permitted-Cross-Domain-Policies',
-            'none'
-        );
+        $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
 
         /*
         |--------------------------------------------------------------------------
         | Referrer Policy
         |--------------------------------------------------------------------------
         */
+        $response->headers->set('Referrer-Policy', 'no-referrer');
+
+        /*
+        |--------------------------------------------------------------------------
+        |  إضافة أمنية: Content Security Policy (CSP)
+        |--------------------------------------------------------------------------
+        */
         $response->headers->set(
-            'Referrer-Policy',
-            'no-referrer'
+            'Content-Security-Policy',
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self';"
         );
 
         /*
@@ -86,13 +75,13 @@ class SecurityHeadersMiddleware
         |--------------------------------------------------------------------------
         */
         if (app()->environment('production')) {
-
             $response->headers->set(
                 'Strict-Transport-Security',
-                'max-age=31536000; includeSubDomains'
+                'max-age=31536000; includeSubDomains; preload'
             );
         }
 
         return $response;
-    }
+
+}
 }

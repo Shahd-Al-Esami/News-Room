@@ -88,8 +88,7 @@ QUEUE_CONNECTION=redis
 
 9. Run queue worker:
 
-php artisan queue:work
-
+php artisan queue:work --queue=Notifications,reports
 
 10. Configure cache
 
@@ -449,7 +448,8 @@ Running Useful Commands
 
 Queue Worker
 
-php artisan queue:work
+php artisan queue:work --queue=Notifications,reports
+Notifications high priority
 
 
 ---
