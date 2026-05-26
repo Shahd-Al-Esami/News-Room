@@ -1,7 +1,46 @@
 
 # NewsRoom
 
-NewsRoom is a Laravel-based news publishing application built with clean, modular architecture. It manages users, articles, comments, tags, attachments, and publication workflows while using observers and repository patterns for maintainability.
+This project is a modular and scalable News Management System API built with Laravel. The system supports article publishing, comments, notifications, scheduled reporting, caching, secure file uploads, API versioning, queue processing, and background task handling.
+
+The architecture follows clean separation of concerns using:
+
+Controllers
+
+Services
+
+Repositories
+
+Events & Listeners
+
+Jobs & Queues
+
+Observers
+
+Commands & Scheduler
+
+API Resources
+
+
+The goal of the project is to provide a maintainable and extensible backend suitable for both web and mobile applications.
+
+
+
+## Tech Stack
+
+PHP 8.2+
+
+Laravel 11
+
+MySQL
+
+Redis (recommended for queues/cache/locks)
+
+Laravel Queue System
+
+Laravel Scheduler
+
+ Sanctum Authentication
 
 ## Project Setup
 
@@ -28,15 +67,51 @@ NewsRoom is a Laravel-based news publishing application built with clean, modula
    ```bash
    php artisan key:generate
    ```
-6. Run database migrations and seeders:
-   ```bash
-   php artisan migrate --seed
-   ```
-7. Build front-end assets:
+
+6. Run migrations
+
+php artisan migrate
+
+
+---
+
+7. Seed database (optional)
+
+php artisan db:seed
+
+
+8. Configure queue
+
+Recommended:
+
+QUEUE_CONNECTION=redis
+
+9. Run queue worker:
+
+php artisan queue:work
+
+
+10. Configure cache
+
+Recommended:
+
+CACHE_STORE=redis
+
+
+11. Run scheduler locally
+
+php artisan schedule:work
+
+Production cron:
+
+* * * * * php /path-to-project/artisan schedule:run >> /dev/null 2>&1
+
+
+12. Build front-end assets:
    ```bash
    npm run dev
    ```
-8. Start the local development server:
+13. Start the local development server:
    ```bash
    php artisan serve
    ```
@@ -45,7 +120,7 @@ NewsRoom is a Laravel-based news publishing application built with clean, modula
 
 ### User
 - Represents authenticated users in the system.
-- Has roles such as `Writer`, `Admin`, and reader-related access.
+- Has roles such as `Writer`, `Admin`, and 'Reader'.
 - Relationships:
   - `hasOne(Profile)`
   - `hasMany(Article)` as the writer of articles
@@ -65,6 +140,8 @@ NewsRoom is a Laravel-based news publishing application built with clean, modula
 
 ### Comment
 - Polymorphic comments that can attach to articles or other commentable entities.
+- Attributes include  `body`, `user_id`, `commentable_id`, `commentable_type`.
+
 - Relationships:
   - `morphTo()` to the `commentable` parent
   - `belongsTo(User)` as the commenter
@@ -79,11 +156,36 @@ NewsRoom is a Laravel-based news publishing application built with clean, modula
 - Relationship:
   - `morphedByMany(Article, 'taggable')`
 
+  ### Profile
+- Attributes include  `bio`, `user_id`, `phone`, `avatar`, `activity_acore`.
+- Relationship:
+  - `belongsTo(User)` 
+  - `morphOne(Attachment)`
+
+
+
+
+
 ## Architecture Decisions
 
 ### Repository Pattern
 
 The application uses a repository pattern to separate data access from business logic.
+
+
+Repositories are responsible only for database access.
+
+Why?
+
+To:
+
+isolate queries
+
+reuse database logic
+
+keep services clean
+
+simplify future database changes
 
 - `App\Repositories\Contracts\BaseRepositoryInterface`
   - Defines base methods: `all`, `find`, `create`, `update`, `delete`
@@ -105,6 +207,10 @@ This design improves testability, dependency inversion, and future maintainabili
 
 The application uses an observer to centralize article lifecycle behavior.
 
+clearing cache after article updates
+
+triggering side effects automatically 
+
 - `App\Observers\ArticleObserver`
   - Observes `Article` model events such as `created`, `updated`, `deleted`, `restored`, and `forceDeleted`
   - Clears cache tags for `Articles` and `Users` when article state changes
@@ -113,73 +219,207 @@ The application uses an observer to centralize article lifecycle behavior.
 
 Using an observer keeps the model event handling outside of controllers and models, making cache invalidation and side effects easier to manage.
 
-## Key Features
 
-- Article publishing workflow with `draft` and `published` statuses
-- Polymorphic comments and attachments
-- Tagging system for articles
-- Cached model lifecycle event handling using an observer
-- Repository layer for article persistence and business rules
-- Role-aware user and article relationships
+## Service Layer
 
-## Notes
+Business logic is handled inside services.
 
-- Ensure `.env` is configured correctly before running migrations.
-- If you need to support queues or notifications, run the queue worker separately:
-  ```bash
-  php artisan queue:work
-  ```
+Why?
 
-This README is tailored for the NewsRoom project and documents the architecture, setup, and core patterns used in the codebase.
-'@; Set-Content -Path README.md -Value $content -Encoding UTF8
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+To:
 
-## About Laravel
+keep controllers thin
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+improve maintainability
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+centralize business rules
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+simplify testing
 
-## Learning Laravel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Example:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Controller
+   ↓
+Service
+   ↓
+Repository
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Events & Listeners
 
-### Premium Partners
+Events are used for decoupled side effects.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Examples:
+
+article published
+
+
+user registered
+
+
+Why?
+
+To:
+
+reduce coupling
+
+improve scalability
+
+allow adding features without modifying core logic
+
+
+
+## Queues & Jobs
+
+Heavy operations are processed asynchronously.
+
+Examples:
+
+notifications
+
+emails
+
+background processing
+
+report generation
+
+
+Why?
+
+To:
+
+improve performance
+
+reduce request time
+
+support scalability
+
+## Cache Locks
+
+Cache locks are used to prevent concurrent execution problems.
+
+Example:
+
+Cache::lock('articles-lock')
+
+Why?
+
+To avoid:
+
+duplicate processing
+
+race conditions
+
+cache stampede
+
+
+## Scheduler & Commands
+
+Scheduled maintenance tasks were implemented using Artisan Commands and Laravel Scheduler.
+
+Examples:
+
+archive old articles
+
+weekly reports
+
+
+Why?
+
+To automate recurring tasks.
+
+## API Resources
+
+Resources are used to shape API responses.
+
+Why?
+
+To:
+
+separate response formatting from business logic
+
+support multiple API versions cleanly
+
+avoid duplicated transformation logic
+
+## API Versioning
+
+The project supports API versioning:
+
+/api/v1
+/api/v2
+
+### Security Considerations
+
+Implemented security practices include:
+
+Sanctum authentication
+
+secure file uploads
+
+validation rules
+
+authorization checks
+
+mass assignment protection
+
+rate limiting
+
+eager loading optimization
+
+
+
+---
+
+Running Useful Commands
+
+Queue Worker
+
+php artisan queue:work
+
+
+---
+
+Scheduler Worker
+
+php artisan schedule:work
+
+
+---
+
+Archive Articles
+
+php artisan articles:archive
+
+Custom days:
+
+php artisan articles:archive 60
+
+Dry run:
+
+php artisan articles:archive --dry-run
+
+
+---
+
+Generate Reports
+
+php artisan send:published-articles-writer-report
+ Dry run:
+php artisan send:published-articles-writer-report --dry-run
+
+
+php artisan send:all-articles-published-report
+ Dry run:
+php artisan send:all-articles-published-report --dry-run
+
+
+
+
+
+---
 
 ## Contributing
 
