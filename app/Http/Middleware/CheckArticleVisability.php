@@ -31,31 +31,22 @@ class CheckArticleVisability
         if (!$user) {
             return response()->json([
                 'message' => 'This article is not published. Authentication required.'
-            ], 401); // غير مسجل دخول
+            ], 401);
         }
 
         $isAdmin = $user->role === 'admin';
         $isOwner = $user->role === 'writer' && $user->id === $article->writer_id;
 
-        if ($article->status === 'draft' && $isOwner) {
+        if ($isAdmin) {
             return $next($request);
         }
-        else if($article->status === 'archived' && ( $isOwner || $isAdmin)) {
 
+        if ($isOwner && in_array($article->status, ['draft', 'archived'])) {
             return $next($request);
-            }
-           
-
-
-
-
-
-        // if ($isAdmin || $isOwner) {
-        //     return $next($request);
-        // }
+        }
 
         return response()->json([
             'message' => 'You do not have permission to view this unpublished article.'
-        ], 403); // غير مصرح له
+        ], 403);
     }
 }

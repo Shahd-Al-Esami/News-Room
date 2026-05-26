@@ -22,9 +22,7 @@ public function authorize(): bool
             return false;
         }
 
-        if ($user->role === 'admin') {
-            return true;
-        }
+      
 
         $article = $this->route('article');
 

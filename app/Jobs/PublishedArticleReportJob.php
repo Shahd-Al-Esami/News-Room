@@ -35,12 +35,11 @@ class PublishedArticleReportJob implements ShouldQueue
 
     public function handle()
     {
-        // جلب مقالات الأسبوع الماضي
+        //get published articles in the last week
         $articles = Article::where('status', 'published')
             ->where('published_at', '>=', now()->subWeek())
             ->get();
-
-        // جلب المدراء
+//get admins who will receive the report
         $admins = User::where('role', 'admin')->get();
 
         foreach ($admins as $admin) {

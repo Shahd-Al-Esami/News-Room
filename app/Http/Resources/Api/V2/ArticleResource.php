@@ -1,9 +1,9 @@
 <?php
 namespace App\Http\Resources\Api\V2;
+use App\Http\Resources\Api\V1\ArticleResource as ArticleResourceV1;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
-class ArticleResource extends JsonResource
+class ArticleResource extends ArticleResourceV1
 {
     /**
      * Transform the resource into an array.
@@ -12,25 +12,12 @@ class ArticleResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'content' => $this->content,
-            'status' => $this->status,
-            'category' => $this->category,
-            'published_at' => $this->created_at->format('Y-m-d H:i'),
-
+          return array_merge(parent::toArray($request), [
+            //add in v2
             'reading_time' => $this->reading_time . ' mins',
-            'comments_count'=>$this->comments_count,
+            'comments_count'=>$this->comments_count ?? 0,
 
-            'writer' => [
-                'id' => $this->writer->id,
-                'first_name' => $this->writer->first_name,
-                'last_name' => $this->writer->last_name,
-                'email' => $this->writer->email,
-            ],
-
-            'tags' => $this->whenLoaded('tags', function() {
+                'tags' => $this->whenLoaded('tags', function() {
                 return $this->tags->map(function($tag) {
                     return [
                         'id' => $tag->id,
@@ -40,19 +27,11 @@ return [
                 });
             }),
 
-            'comments' => $this->whenLoaded('comments', function() {
-                return $this->comments->map(function($comment) {
-                    return [
-                        'id' => $comment->id,
-                        'body' => $comment->body,
-                        'commented_by' => $comment->user->first_name . ' ' . $comment->user->last_name,
-                        'created_at' => $comment->created_at->diffForHumans(),
-                    ];
-                });
-            }),
-
-
-        ];
+            ]);
 
         }
+
+
+
+
 }

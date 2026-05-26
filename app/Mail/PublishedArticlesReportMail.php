@@ -26,8 +26,12 @@ class PublishedArticlesReportMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        foreach($this->articles as $article){
+            $article->loadMissing('writer');
+        }
         return new Envelope(
-            subject: 'Published Articles Report Mail',
+            subject: 'Published Articles Report Mail' . $this->articles->count() . ' articles published in the last week',
+
         );
     }
 
@@ -37,7 +41,7 @@ class PublishedArticlesReportMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.published-articles-report',
             with: [
                 'articles' => $this->articles,
             ],

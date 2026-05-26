@@ -21,35 +21,29 @@ return [
             'category' => $this->category,
             'published_at' => $this->created_at->format('Y-m-d H:i'),
 
-            'writer' => [
-                'id' => $this->writer->id,
-                'first_name' => $this->writer->first_name,
-                'last_name' => $this->writer->last_name,
-                'email' => $this->writer->email,
-            ],
 
-            // 'tags' => $this->whenLoaded('tags', function() {
-            //     return $this->tags->map(function($tag) {
-            //         return [
-            //             'id' => $tag->id,
-            //             'name' => $tag->name,
-            //             'slug' => $tag->slug,
-            //         ];
-            //     });
-            // }),
 
-            'comments' => $this->whenLoaded('comments', function() {
-                return $this->comments->map(function($comment) {
-                    return [
-                        'id' => $comment->id,
-                        'body' => $comment->body,
-                        'commented_by' => $comment->user->first_name . ' ' . $comment->user->last_name,
-                        'created_at' => $comment->created_at->diffForHumans(),
-                    ];
-                });
+         'writer' => $this->when($this->relationLoaded('writer') && $this->writer, function() {
+                return [
+                    'id'         => $this->writer->id,
+                    'first_name' => $this->writer->first_name,
+                    'last_name'  => $this->writer->last_name,
+                    'email'      => $this->writer->email,
+                ];
             }),
 
 
+
+         'comments' => $this->whenLoaded('comments', function() {
+                return $this->comments->map(function($comment) {
+                    return [
+                        'id'   => $comment->id,
+                        'body' => $comment->body,
+                        'commented_by' => optional($comment->user)->first_name . ' ' . optional($comment->user)->last_name,
+                        'created_at'   => $comment->created_at?->diffForHumans(),
+                    ];
+                });
+            }),
         ];
 
         }

@@ -16,12 +16,21 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user=Auth::user();
-        $writer=$user->role ==='writer';
-        if($user && $writer && $user->id === $request->route('article')->writer_id){
-            return $next($request);
-        }
-        return response()->json(['message'=>'Unauthorized'],403);
+       $user = Auth::user();
 
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+      
+        if ($user->role === 'writer') {
+            $article = $request->route('article');
+
+            if ($article && $user->id === $article->writer_id) {
+                return $next($request);
+            }
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 }

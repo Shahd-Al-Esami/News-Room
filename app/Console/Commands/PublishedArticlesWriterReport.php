@@ -13,7 +13,7 @@ class PublishedArticlesWriterReport extends Command
      *
      * @var string
      */
-    protected $signature = 'send:published-articles-writer-report
+    protected $signature = 'articles:report
     --dry-run:preview report without logging';
 
     /**

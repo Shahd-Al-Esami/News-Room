@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
     {
           Article::observe(ArticleObserver::class);
 
-
+//rate limiter for api routes
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

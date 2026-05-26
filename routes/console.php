@@ -13,8 +13,8 @@ Artisan::command('inspire', function () {
 Schedule::command('send:all-articles-published-report')->weeklyOn(1, '8:00');
 
 //send articles report every friday
-Schedule::command('send:published-articles-writer-report')->fridays()->at('8:00');
-
+Schedule::command('articles:report')->fridays()->at('8:00');
+//send articles report  on the first day of the month 
 Schedule::command('articles:archive')->monthlyOn(1, '00:00');
 
 //on server
